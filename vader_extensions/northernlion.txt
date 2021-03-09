@@ -1,0 +1,6 @@
+{
+"lionlate": 0.5,
+"liontomo": 1,
+"lionstop": -0.5,
+"lionbaby": 1
+}
