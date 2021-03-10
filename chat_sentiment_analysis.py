@@ -29,7 +29,7 @@ def analyse_vod_mood(video_id):
 
     leans_at_time = {}
     unrecognized_chats = []
-    timestep_interval = 1 
+    timestep_interval = 5 
 
     for chat in chat_data:
         time = floor(chat[0] / 60 / timestep_interval)
@@ -52,9 +52,9 @@ def analyse_vod_mood(video_id):
 
     # Plotting
     fig, ax = plt.subplots()
-    ax.bar(list(avg_lean_at_time.keys()), list(avg_lean_at_time.values()), bottom=0)
-    ax.set_title(f"{channel_id}'s chat mood on {stream_date}")
-    ax.set_ylabel('Mood')
+    ax.bar(list(avg_lean_at_time.keys()), list(avg_lean_at_time.values()), bottom=0, color="grey")
+    ax.set_title(f"{channel_id}'s chat's mood on {stream_date}")
+    ax.set_ylabel('Mood (from -1 to 1)')
     ax.set_xlabel(f'Time (in intervals of {timestep_interval} minute(s))')
     plt.show()
         

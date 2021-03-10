@@ -1,6 +1,7 @@
 import json
 import requests
 import sys
+from webscraping import get_vod_channel
 
 client_id = 'kimne78kx3ncx6brgo4mv6wki5h1ko'
 
@@ -22,10 +23,9 @@ def load_chat_data(video_id):
     response.raise_for_status()
     data = response.json()
 
-    stream_date = data['comments'][0]['created_at'].split('T')[0]
-    channel_id = data['comments'][0]['channel_id']
-
     collect_chat_data(data)
+
+    stream_date = data['comments'][0]['created_at'].split('T')[0]
 
     cursor = None
     if '_next' in data:
@@ -47,4 +47,6 @@ def load_chat_data(video_id):
 
     print(f"Finished loading {len(chat_data)} chat messages")
 
-    return channel_id, stream_date, chat_data
+    channel_name = get_vod_channel(video_id)
+
+    return channel_name, stream_date, chat_data
