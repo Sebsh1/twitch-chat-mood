@@ -17,8 +17,12 @@ Run `python chat_sentiment_analysis -vod [video_id]` to analyse a VOD where vide
 
 ~~Run `python chat_sentiment_analysis -live [channel_name]` to analyse a live chat in real time where channel_name is the name of the channel's chat.~~
 
+Use `-m` to specify a specific minute interval for the bars, default is 5.
+
+Use `-d` to enter debugging mode, where unrecognized (single word, neutral) chats are displayed. Useful for finding things to add to the vader dictionaries. 
+
 ## TODO
 
-    - Hook it up to live twitch chat
-    - Get channel name through channel_id instead of scraping it 
-    - Expand VADER dictionaries
+    * Hook it up to live twitch chat
+    * Get channel name through Twitch API using channel_id instead of scraping it 
+    * Expand VADER dictionaries

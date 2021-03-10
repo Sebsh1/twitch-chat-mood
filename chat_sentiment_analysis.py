@@ -5,101 +5,162 @@ from live_chat_reciever import get_chat_messages
 from numpy import mean
 from math import floor
 import matplotlib.pyplot as plt
-import sys, os, json
-import argparse
+import matplotlib.animation as animation
+import sys, os, json, argparse, datetime, threading
+
 
 def init_custom_vader():
     analyzer = SentimentIntensityAnalyzer()
 
+    # Expand with custom dictionaries
+    count = 0
     for entry in os.scandir("vader_extensions"):
         if entry.path.endswith(".txt"):
             with open(entry) as f: 
                 data = f.read() 
                 js = json.loads(data) 
                 analyzer.lexicon.update(js)
-    
-    print(f"Updated VADER with content of vader_extensions")
-
+                count += 1
+    print(f"Updated VADER with content of {count} dictionaries in vader_extensions")
     return analyzer
 
-def analyse_vod_mood(video_id):
-    channel_id, stream_date, chat_data = load_chat_data(video_id)    
+def analyse_vod_mood(video_id, timestep):
+    channel_id, stream_date, chat_data = load_chat_data(video_id)
 
     analyser = init_custom_vader()
-
     leans_at_time = {}
-    unrecognized_chats = []
-    timestep_interval = 5 
-
+    if args.debug:
+        unrecognized_chats = []
+    
     for chat in chat_data:
-        time = floor(chat[0] / 60 / timestep_interval)
+
+        # Dispersing timings into intervals
+        time = floor(chat[0] / 60 / int(timestep))
+
         leaning = analyser.polarity_scores(chat[1])['compound']
 
-        if chat[1].startswith('!'): # Likely to be chat commands
+        # Discard chat commands
+        if chat[1].startswith('!'): 
             continue
 
-        if leaning == 0.0 and ' ' not in chat[1]:  # One word leanings of 0 are likely to be unrecognized emotes or other unrecognized words
-            unrecognized_chats.append(chat[1])
+        # Store leaning unless likely to be unrecognized emote
+        if leaning == 0.0 and ' ' not in chat[1]:
+            if args.debug:
+                unrecognized_chats.append(chat[1])
+            else: 
+                continue
         else:    
             if time in leans_at_time:
                 leans_at_time[time].append(leaning)
             else:
                 leans_at_time[time] = [leaning]
            
+    # Data for plotting
     avg_lean_at_time = {}
     for time in list(leans_at_time.keys()):
         avg_lean_at_time[time] = mean(leans_at_time[time])
 
     # Plotting
-    fig, ax = plt.subplots()
-    ax.bar(list(avg_lean_at_time.keys()), list(avg_lean_at_time.values()), bottom=0, color="grey")
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.bar(list(avg_lean_at_time.keys()), list(avg_lean_at_time.values()), color="grey")
     ax.set_title(f"{channel_id}'s chat's mood on {stream_date}")
     ax.set_ylabel('Mood (from -1 to 1)')
-    ax.set_xlabel(f'Time (in intervals of {timestep_interval} minute(s))')
+    ax.set_xlabel(f'Time (in intervals of {timestep} minute(s))')
     plt.show()
         
-    # print("Unrecognized words/sentences:\n", unrecognized_chats)
+    # For inspection and future expansion of dictionaries
+    if args.debug:
+        print("Unrecognized emotes/words/sentences:\n", unrecognized_chats)
 
-def analyse_live_mood(channel_name):
+def analyse_live_mood(channel_name, timestep):
     analyser = init_custom_vader()
-    unrecognized_chats = []
     leans_at_time = {}
-    timestep_interval = 1
+    avg_lean_at_time = {}
+    if args.debug:
+        unrecognized_chats = []
+
+    # Interval control
+    start_time_interval = None
+    prev_time = 0
+
+    # Plotting
+    plt.ion()
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    bars = plt.bar(list(avg_lean_at_time.keys()), list(avg_lean_at_time.values()), color="grey")
+    today = datetime.datetime.now().strftime('%Y-%m-%d')
+    ax.set_title(f"{channel_name}'s chat's mood on {today}")
+    ax.set_ylabel('Mood (from -1 to 1)')
+    ax.set_xlabel(f'Time (in intervals of {timestep} minute(s))')
 
     for time, msg in get_chat_messages(channel_name):
-        time = floor(time / 60 / timestep_interval)
-        leaning = analyser.polarity_scores(msg)['compound']
 
-        if msg.startswith('!'): # Likely to be chat commands
+        # Dispersing timings into intervals
+        if start_time_interval is None:
+            time = floor(time / 60 / int(timestep))
+            start_time_interval = time
+            time = 0
+        else: 
+            time = floor(time / 60 / int(timestep)) - start_time_interval
+
+            # New interval, Update data for plot
+            if time != prev_time:
+                print("NEW INTERVAL")
+                avg_lean_at_time[prev_time] = mean(leans_at_time[prev_time])
+                bars.remove()
+                bar = ax.bar(list(avg_lean_at_time.keys()), list(avg_lean_at_time.values()))
+                ax.relim()
+                ax.autoscale_view(True,True,True)
+                plt.draw()
+                prev_time = time
+
+        # Discard chat commands
+        if msg.startswith('!'):
             continue
 
-        if leaning == 0.0 and ' ' not in msg:  # One word leanings of 0 are likely to be unrecognized emotes or other unrecognized words
-            unrecognized_chats.append(msg)
+        leaning = analyser.polarity_scores(msg)['compound']
+        print(leaning, "  -  ", msg)
+
+        # Store leaning unless likely to be unrecognized emote
+        if leaning == 0.0 and ' ' not in msg:
+            if args.debug:
+                unrecognized_chats.append(msg)
+            else: 
+                continue
         else:    
             if time in leans_at_time:
                 leans_at_time[time].append(leaning)
             else:
                 leans_at_time[time] = [leaning]
            
-    avg_lean_at_time = {}
-    for time in list(leans_at_time.keys()):
-        avg_lean_at_time[time] = mean(leans_at_time[time])
-
-
+    # For inspection and future expansion of dictionaries
+    if args.debug:
+        print("Unrecognized emotes/words/sentences:\n", unrecognized_chats)
 
 if __name__ == "__main__":
 
+    # Argument support
     parser = argparse.ArgumentParser()
     parser.add_argument('-vod', action='store')
     parser.add_argument('-live', action='store')
+    parser.add_argument('-m', "--minutes", action='store')
+    parser.add_argument('-d', '--debug', action='store_true')
     args = parser.parse_args()
     
+    # Setting time intervals for bars
+    if args.minutes is not None:
+        timestep = args.minutes
+    else: 
+        timestep = 5
+
+    # Choosing main mode
     if args.vod is not None and args.live is not None:
         print("You can't analyse a vod and a live channel at the same time")
     elif args.vod is not None:
-        analyse_vod_mood(args.vod)
+        analyse_vod_mood(args.vod, timestep)
     elif args.live is not None:
-        analyse_live_mood(args.live)
+        analyse_live_mood(args.live, timestep)
     else:
         print("Usage:\n chat_sentiment_analysis -vod [video_id] \nor\n chat_sentiment_analysis -live [channel_name]")
         sys.exit(1)

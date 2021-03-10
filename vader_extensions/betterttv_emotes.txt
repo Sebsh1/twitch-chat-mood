@@ -24,7 +24,7 @@
 "sadge": -2,
 "monkaw": 0.5,
 "hypers": 3,
-"yep": 0,
+"yepp": 0,
 "kapp": 0.2,
 "ayaya": 0.1,
 "ezclap": 3,

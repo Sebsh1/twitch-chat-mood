@@ -34,12 +34,8 @@ def get_chat_messages(channel_name):
         if resp.startswith('PING'):
             sock.send("PONG\n".encode('utf-8'))
         elif len(resp) > 0:
-            time = datetime.now().strftime("%Y:%m:%d:%H:%M:%S")
-            user, channel, message = re.search(':(.*)\!.*@.*\.tmi\.twitch\.tv PRIVMSG #(.*) :(.*)', resp).groups()
+            time = datetime.now().timestamp()
+            _, _, message = re.search(':(.*)\!.*@.*\.tmi\.twitch\.tv PRIVMSG #(.*) :(.*)', resp).groups()
             yield(time, message) 
             
     sock.close()
-
-if __name__ == "__main__":
-    for time, msg in get_chat_messages("sovietwomble"):
-        print(time, msg)

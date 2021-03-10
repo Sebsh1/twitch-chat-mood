@@ -12,5 +12,9 @@ def get_vod_channel(video_id):
     driver.get(URL)
     html = driver.page_source
     soup = BeautifulSoup(html, "lxml")
-    channel_name = soup.find('h1', class_ = 'tw-c-text-base tw-font-size-4 tw-line-height-heading tw-semibold tw-title').contents[0]
+    try:
+        channel_name = soup.find('h1', class_ = 'tw-c-text-base tw-font-size-4 tw-line-height-heading tw-semibold tw-title').contents[0]
+    except: 
+        print("Couldn't scrape channel name for some reason...")
+        channel_name = "NA"
     return channel_name
