@@ -22,6 +22,9 @@ def load_chat_data(video_id):
     response.raise_for_status()
     data = response.json()
 
+    stream_date = data['comments'][0]['created_at'].split('T')[0]
+    channel_id = data['comments'][0]['channel_id']
+
     collect_chat_data(data)
 
     cursor = None
@@ -43,4 +46,5 @@ def load_chat_data(video_id):
             cursor = None
 
     print(f"Finished loading {len(chat_data)} chat messages")
-    return chat_data
+
+    return channel_id, stream_date, chat_data
