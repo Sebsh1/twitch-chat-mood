@@ -1,4 +1,4 @@
 {
     "nickname"  : "insert_your_own",
-    "token"     : "oauth:insert_your_own"
+    "token"     : "oauth:insert_your_own111"
 }
