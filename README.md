@@ -1,4 +1,5 @@
 # Twitch Chat Mood Analyser
+
 This tool visualises the sentiment in twitch chat over time.
 It does so by using [VADER](https://github.com/cjhutto/vaderSentiment) extended with custom dictionaries to capture the sentiment of twitch emotes and other words unique to twitch chat.
 
@@ -16,7 +17,8 @@ Run `python chat_sentiment_analysis -vod [video_id]` to analyse a VOD where vide
 
 ~~Run `python chat_sentiment_analysis -live [channel_name]` to analyse a live chat in real time where channel_name is the name of the channel's chat.~~
 
-###### TODO
+## TODO
+
     - Hook it up to live twitch chat
     - Get channel name through channel_id instead of scraping it 
     - Expand VADER dictionaries
