@@ -8,7 +8,7 @@ The values for the custom 'words' are chosen by me, and if you disagree feel fre
 
 ## Usage
 
-You must have a Twitch account and request an authentication token from [https://twitchapps.com/tmi/] before use. 
+You must have a Twitch account and request an authentication token from https://twitchapps.com/tmi/ before use. 
 
 Enter your Twitch nickname and token into the "twitch_api_cred.txt" file.
 
