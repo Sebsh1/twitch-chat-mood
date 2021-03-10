@@ -112,7 +112,6 @@ def analyse_live_mood(channel_name, timestep):
 
             # New interval
             if time != prev_time:
-                print("----------------NEW INTERVAL STARTED----------------")
                 # Update data
                 avg_lean_at_time[prev_time] = mean(leans_at_time[prev_time])
 
@@ -129,7 +128,6 @@ def analyse_live_mood(channel_name, timestep):
             continue
 
         leaning = analyser.polarity_scores(msg)['compound']
-        print(leaning, "  -  ", msg)
 
         # Store leaning unless likely to be unrecognized emote
         if leaning == 0.0 and ' ' not in msg:
