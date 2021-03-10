@@ -15,7 +15,7 @@ Enter your Twitch nickname and token into the "twitch_api_cred.txt" file.
 
 Run `python chat_sentiment_analysis -vod [video_id]` to analyse a VOD where video_id is the number in the URL of the twitch VOD.
 
-~~Run `python chat_sentiment_analysis -live [channel_name]` to analyse a live chat in real time where channel_name is the name of the channel's chat.~~
+Run `python chat_sentiment_analysis -live [channel_name]` to analyse a live chat in real time where channel_name is the name of the channel's chat.
 
 Use `-m` to specify a specific minute interval for the bars, default is 5.
 
@@ -23,6 +23,6 @@ Use `-d` to enter debugging mode, where unrecognized (single word, neutral) chat
 
 ## TODO
 
-    * Hook it up to live twitch chat
-    * Get channel name through Twitch API using channel_id instead of scraping it 
+    * Live chat plotting window not responding, but still works fine. 
+    * Get channel name through Twitch API using channel_id instead of scraping it, since scraping seems volatile (and slower)
     * Expand VADER dictionaries

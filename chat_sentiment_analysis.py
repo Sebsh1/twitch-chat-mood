@@ -4,12 +4,13 @@ from webscraping import get_vod_channel
 from live_chat_reciever import get_chat_messages
 from numpy import mean
 from math import floor
+import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 import sys, os, json, argparse, datetime, threading
 
 
 def init_custom_vader():
+    # Load pre-trained classifier
     analyzer = SentimentIntensityAnalyzer()
 
     # Expand with custom dictionaries
@@ -21,6 +22,7 @@ def init_custom_vader():
                 js = json.loads(data) 
                 analyzer.lexicon.update(js)
                 count += 1
+
     print(f"Updated VADER with content of {count} dictionaries in vader_extensions")
     return analyzer
 
@@ -34,16 +36,17 @@ def analyse_vod_mood(video_id, timestep):
     
     for chat in chat_data:
 
-        # Dispersing timings into intervals
+        # Disperse timings into intervals
         time = floor(chat[0] / 60 / int(timestep))
 
+        # Classify
         leaning = analyser.polarity_scores(chat[1])['compound']
 
         # Discard chat commands
         if chat[1].startswith('!'): 
             continue
 
-        # Store leaning unless likely to be unrecognized emote
+        # Store leaning, unless likely to be unrecognized emote
         if leaning == 0.0 and ' ' not in chat[1]:
             if args.debug:
                 unrecognized_chats.append(chat[1])
@@ -61,8 +64,7 @@ def analyse_vod_mood(video_id, timestep):
         avg_lean_at_time[time] = mean(leans_at_time[time])
 
     # Plotting
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+    fig, ax = plt.subplots()
     ax.bar(list(avg_lean_at_time.keys()), list(avg_lean_at_time.values()), color="grey")
     ax.set_title(f"{channel_id}'s chat's mood on {stream_date}")
     ax.set_ylabel('Mood (from -1 to 1)')
@@ -85,18 +87,22 @@ def analyse_live_mood(channel_name, timestep):
     prev_time = 0
 
     # Plotting
-    plt.ion()
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    bars = plt.bar(list(avg_lean_at_time.keys()), list(avg_lean_at_time.values()), color="grey")
+    matplotlib.use('tkAgg')
+    plt.ioff()
+    fig, ax = plt.subplots()
+    ax.bar(list(avg_lean_at_time.keys()), list(avg_lean_at_time.values()), color="grey")
     today = datetime.datetime.now().strftime('%Y-%m-%d')
     ax.set_title(f"{channel_name}'s chat's mood on {today}")
     ax.set_ylabel('Mood (from -1 to 1)')
     ax.set_xlabel(f'Time (in intervals of {timestep} minute(s))')
+    ax.relim()
+    ax.autoscale_view(True,True,True)
+    plt.draw()
+    plt.pause(0.001)
 
     for time, msg in get_chat_messages(channel_name):
 
-        # Dispersing timings into intervals
+        # Disperse timings into intervals
         if start_time_interval is None:
             time = floor(time / 60 / int(timestep))
             start_time_interval = time
@@ -104,15 +110,18 @@ def analyse_live_mood(channel_name, timestep):
         else: 
             time = floor(time / 60 / int(timestep)) - start_time_interval
 
-            # New interval, Update data for plot
+            # New interval
             if time != prev_time:
-                print("NEW INTERVAL")
+                print("----------------NEW INTERVAL STARTED----------------")
+                # Update data
                 avg_lean_at_time[prev_time] = mean(leans_at_time[prev_time])
-                bars.remove()
-                bar = ax.bar(list(avg_lean_at_time.keys()), list(avg_lean_at_time.values()))
-                ax.relim()
-                ax.autoscale_view(True,True,True)
+
+                # Update plot
+                ax.cla()
+                ax.bar(list(avg_lean_at_time.keys()), list(avg_lean_at_time.values()), color="grey")
                 plt.draw()
+                plt.pause(0.001)
+
                 prev_time = time
 
         # Discard chat commands
@@ -137,6 +146,9 @@ def analyse_live_mood(channel_name, timestep):
     # For inspection and future expansion of dictionaries
     if args.debug:
         print("Unrecognized emotes/words/sentences:\n", unrecognized_chats)
+
+    # Stop plot from disapearing
+    plt.show()
 
 if __name__ == "__main__":
 
